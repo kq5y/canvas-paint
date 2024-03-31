@@ -1,27 +1,59 @@
-import { useMemo, useRef, useState } from "react";
-import { hsvToRgb } from "./util";
-
-type Mode =
-    | "pen"
-    | "pencil"
-    | "marker"
-    | "eraser"
-    | "fill"
-    | "line"
-    | "rect"
-    | "circle";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { HSVColor, hsvToRgb } from "./util";
+import { Mode, Paint } from "./paint";
 
 function Canvas() {
+    const paintRef = useRef<Paint | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [mode, setMode] = useState<Mode>("pen");
-    const [color, setColor] = useState({ h: 0, s: 0, v: 0 });
+    const [brushSize, setBrushSize] = useState(5);
+    const [opacity, setOpacity] = useState(100);
+    const [color, setColor] = useState<HSVColor>({ h: 0, s: 0, v: 0 });
     const rgbStr = useMemo(() => {
         const rgb = hsvToRgb({ h: color.h, s: color.s, v: color.v });
         return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
     }, [color]);
-    const changeModeHandler = (mode: Mode) => {
-        setMode(mode);
+    const changeModeHandler = (_mode: Mode) => {
+        setMode(_mode);
+        if (paintRef.current) {
+            paintRef.current.mode = _mode;
+        }
     };
+    const changeBrushSizeHandler = (_size: number) => {
+        setBrushSize(_size);
+        if (paintRef.current) {
+            paintRef.current.brushSize = _size;
+        }
+    };
+    const changeOpacityHandler = (_opacity: number) => {
+        setOpacity(_opacity);
+        if (paintRef.current) {
+            paintRef.current.opacity = _opacity;
+        }
+    };
+    const changeColorHandler = (_color: HSVColor) => {
+        setColor(_color);
+        if (paintRef.current) {
+            paintRef.current.color = _color;
+        }
+    };
+    useEffect(() => {
+        if (canvasRef.current) {
+            paintRef.current = new Paint(
+                canvasRef.current,
+                mode,
+                brushSize,
+                opacity,
+                color
+            );
+            paintRef.current.initialize();
+        }
+        return () => {
+            if (paintRef.current) {
+                paintRef.current.destroy();
+            }
+        };
+    }, []);
     return (
         <div
             style={{
@@ -116,9 +148,39 @@ function Canvas() {
                     <button>Clear</button>
                 </div>
                 <div
+                    className="settings"
+                    style={{ display: "grid", gridTemplateColumns: "1fr" }}
+                >
+                    <label htmlFor="brushSize">Brush Size</label>
+                    <input
+                        type="range"
+                        id="brushSize"
+                        min={1}
+                        max={100}
+                        step={1}
+                        value={brushSize}
+                        onChange={(e) => {
+                            changeBrushSizeHandler(parseInt(e.target.value));
+                        }}
+                    />
+                    <label htmlFor="opacity">Opacity</label>
+                    <input
+                        type="range"
+                        id="opacity"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={opacity}
+                        onChange={(e) => {
+                            changeOpacityHandler(parseInt(e.target.value));
+                        }}
+                    />
+                </div>
+                <div
                     className="colors"
                     style={{ display: "grid", gridTemplateColumns: "1fr" }}
                 >
+                    <label>Color</label>
                     <div
                         style={{
                             width: "100%",
@@ -135,7 +197,10 @@ function Canvas() {
                         step={1}
                         value={color.h}
                         onChange={(e) => {
-                            setColor({ ...color, h: parseInt(e.target.value) });
+                            changeColorHandler({
+                                ...color,
+                                h: parseInt(e.target.value)
+                            });
                         }}
                     />
                     <label htmlFor="colorS">S</label>
@@ -147,7 +212,10 @@ function Canvas() {
                         step={1}
                         value={color.s}
                         onChange={(e) => {
-                            setColor({ ...color, s: parseInt(e.target.value) });
+                            changeColorHandler({
+                                ...color,
+                                s: parseInt(e.target.value)
+                            });
                         }}
                     />
                     <label htmlFor="colorV">V</label>
@@ -159,7 +227,10 @@ function Canvas() {
                         step={1}
                         value={color.v}
                         onChange={(e) => {
-                            setColor({ ...color, v: parseInt(e.target.value) });
+                            changeColorHandler({
+                                ...color,
+                                v: parseInt(e.target.value)
+                            });
                         }}
                     />
                 </div>

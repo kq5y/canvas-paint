@@ -5,10 +5,9 @@ function _decimalPart(a: number): number {
     return parseFloat((a > 0 ? "+" : "-") + result);
 }
 
-export function hsvToRgb(
-    hsv: { h: number; s: number; v: number },
-    opacity: number = 1
-): number[] {
+export type HSVColor = { h: number; s: number; v: number };
+
+export function hsvToRgb(hsv: HSVColor, opacity: number = 1): number[] {
     hsv.h = Math.max(Math.min(360, hsv.h), 0);
     hsv.s = Math.max(Math.min(100, hsv.s), 0);
     hsv.v = Math.max(Math.min(100, hsv.v), 0);
