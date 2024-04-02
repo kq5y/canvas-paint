@@ -1,11 +1,23 @@
 import { BrushBase } from "./BrushBase";
 
-export class PenBrush extends BrushBase {
+export class EraserBrush extends BrushBase {
     constructor(context: CanvasRenderingContext2D, previewContext: CanvasRenderingContext2D) {
         super(context, previewContext);
 
         this._previewContext.lineCap = "round";
         this._previewContext.lineJoin = "round";
+        this._context.globalCompositeOperation = "destination-out";
+        this._initialize();
+    }
+
+    _initialize(): void {
+        this._previewContext.strokeStyle = "white";
+        this._previewContext.globalAlpha = 1;
+    }
+
+    render(): void {
+        this._context.drawImage(this._previewContext.canvas, 0, 0);
+        this._clear();
     }
 
     onPointerDown(event: PointerEvent): void {
@@ -16,6 +28,7 @@ export class PenBrush extends BrushBase {
 
     onPointerMove(event: PointerEvent): void {
         super.onPointerMove(event);
+        this._initialize();
         this._clear();
         this._previewContext.lineTo(event.offsetX, event.offsetY);
         this._previewContext.stroke();
@@ -23,6 +36,7 @@ export class PenBrush extends BrushBase {
 
     onPointerUp(event: PointerEvent): void {
         super.onPointerUp(event);
+        this._initialize();
         this._previewContext.closePath();
         this._clear();
         this._previewContext.beginPath();
@@ -40,6 +54,5 @@ export class PenBrush extends BrushBase {
             );
         }
         this._previewContext.stroke();
-        this._previewContext.closePath();
     }
 }

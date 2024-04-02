@@ -1,4 +1,5 @@
 import { BrushBase } from "./brush/BrushBase";
+import { EraserBrush } from "./brush/EraserBrush";
 import { PenBrush } from "./brush/PenBrush";
 import { HSVColor } from "./util";
 import { hsv2rgba, makeColorStr } from "./util/color";
@@ -72,9 +73,9 @@ export class Paint {
 
     destroy() {
         this._previewCanvas.removeEventListener("pointerdown", this._onPointerDown.bind(this));
-        window.removeEventListener("pointermove", this._onPointerMove.bind(this));
-        window.removeEventListener("pointerup", this._onPointerUp.bind(this));
-        window.removeEventListener("pointercancel", this._onPointerUp.bind(this));
+        this._previewCanvas.removeEventListener("pointermove", this._onPointerMove.bind(this));
+        this._previewCanvas.removeEventListener("pointerup", this._onPointerUp.bind(this));
+        this._previewCanvas.removeEventListener("pointercancel", this._onPointerUp.bind(this));
     }
 
     get mode() {
@@ -82,28 +83,35 @@ export class Paint {
     }
 
     set mode(mode: Mode) {
-        switch (mode) {
-            case "pen":
-                this._brush = new PenBrush(this._previewContext!);
-                break;
-            case "pencil":
-                break;
-            case "marker":
-                break;
-            case "eraser":
-                break;
-            case "fill":
-                break;
-            case "line":
-                break;
-            case "rect":
-                break;
-            case "circle":
-                break;
-            default:
-                throw new Error(`Invalid mode: ${mode}`);
+        if (this._previewContext && this._context) {
+            this._previewContext.strokeStyle = makeColorStr(hsv2rgba(this._color));
+            this._previewContext.globalAlpha = this._opacity / 100;
+            switch (mode) {
+                case "pen":
+                    this._brush = new PenBrush(this._context, this._previewContext);
+                    break;
+                case "pencil":
+                    this._brush = null;
+                    break;
+                case "marker":
+                    this._brush = null;
+                    break;
+                case "eraser":
+                    this._brush = new EraserBrush(this._context, this._previewContext);
+                    break;
+                case "fill":
+                    break;
+                case "line":
+                    break;
+                case "rect":
+                    break;
+                case "circle":
+                    break;
+                default:
+                    throw new Error(`Invalid mode: ${mode}`);
+            }
+            this._mode = mode;
         }
-        this._mode = mode;
     }
 
     get brushSize() {
@@ -155,7 +163,7 @@ export class Paint {
     }
 
     private modified() {
-        if (this._context && this._previewContext) {
+        if (this._context && this._previewContext && this._brush) {
             const imageData = this._context.getImageData(
                 0,
                 0,
@@ -166,13 +174,7 @@ export class Paint {
             if (this._imageLog.length > 20) {
                 this._imageLog.shift();
             }
-            this._context.drawImage(this._previewCanvas, 0, 0);
-            this._previewContext.clearRect(
-                0,
-                0,
-                this._previewCanvas.width,
-                this._previewCanvas.height
-            );
+            this._brush.render();
         }
     }
 

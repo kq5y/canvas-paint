@@ -2,16 +2,35 @@ import { calcCatmullRomSpline } from "../util/complement";
 
 export class BrushBase {
     protected _context: CanvasRenderingContext2D;
+    protected _previewContext: CanvasRenderingContext2D;
     protected _points: { x: number; y: number }[];
     protected _controlPoints: {
         cp1: { x: number; y: number };
         cp2: { x: number; y: number };
     }[];
 
-    constructor(context: CanvasRenderingContext2D) {
+    constructor(context: CanvasRenderingContext2D, previewContext: CanvasRenderingContext2D) {
         this._context = context;
+        this._previewContext = previewContext;
         this._points = [];
         this._controlPoints = [];
+
+        this._context.globalCompositeOperation = "source-over";
+        this._previewContext.globalCompositeOperation = "source-over";
+    }
+
+    _clear(): void {
+        this._previewContext.clearRect(
+            0,
+            0,
+            this._previewContext.canvas.width,
+            this._previewContext.canvas.height
+        );
+    }
+
+    render(): void {
+        this._context.drawImage(this._previewContext.canvas, 0, 0);
+        this._clear();
     }
 
     onPointerDown(event: PointerEvent): void {
