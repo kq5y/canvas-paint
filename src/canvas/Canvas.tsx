@@ -4,6 +4,7 @@ import { Mode, Paint } from "./paint";
 
 function Canvas() {
     const paintRef = useRef<Paint | null>(null);
+    const previewCanvasRef = useRef<HTMLCanvasElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [mode, setMode] = useState<Mode>("pen");
     const [brushSize, setBrushSize] = useState(5);
@@ -37,9 +38,20 @@ function Canvas() {
             paintRef.current.color = _color;
         }
     };
+    const undoHandler = () => {
+        if (paintRef.current) {
+            paintRef.current.undo();
+        }
+    };
+    const clearHandler = () => {
+        if (paintRef.current) {
+            paintRef.current.clear();
+        }
+    };
     useEffect(() => {
-        if (canvasRef.current) {
+        if (canvasRef.current && previewCanvasRef.current) {
             paintRef.current = new Paint(
+                previewCanvasRef.current,
                 canvasRef.current,
                 mode,
                 brushSize,
@@ -144,13 +156,10 @@ function Canvas() {
                     >
                         Circle
                     </button>
-                    <button>Back</button>
-                    <button>Clear</button>
+                    <button onClick={undoHandler}>Undo</button>
+                    <button onClick={clearHandler}>Clear</button>
                 </div>
-                <div
-                    className="settings"
-                    style={{ display: "grid", gridTemplateColumns: "1fr" }}
-                >
+                <div className="settings" style={{ display: "grid", gridTemplateColumns: "1fr" }}>
                     <label htmlFor="brushSize">Brush Size</label>
                     <input
                         type="range"
@@ -176,10 +185,7 @@ function Canvas() {
                         }}
                     />
                 </div>
-                <div
-                    className="colors"
-                    style={{ display: "grid", gridTemplateColumns: "1fr" }}
-                >
+                <div className="colors" style={{ display: "grid", gridTemplateColumns: "1fr" }}>
                     <label>Color</label>
                     <div
                         style={{
@@ -243,7 +249,28 @@ function Canvas() {
                     position: "relative"
                 }}
             >
-                <canvas width={800} height={600} ref={canvasRef} />
+                <canvas
+                    width={800}
+                    height={600}
+                    ref={canvasRef}
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 0
+                    }}
+                />
+                <canvas
+                    width={800}
+                    height={600}
+                    ref={previewCanvasRef}
+                    style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 1
+                    }}
+                />
             </div>
         </div>
     );
