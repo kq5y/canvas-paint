@@ -1,4 +1,4 @@
-import { BrushBase } from "./BrushBase";
+import { BrushBase } from "./BaseBrush";
 
 export class PenBrush extends BrushBase {
     constructor(context: CanvasRenderingContext2D, previewContext: CanvasRenderingContext2D) {

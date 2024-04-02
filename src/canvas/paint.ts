@@ -1,4 +1,4 @@
-import { BrushBase } from "./brush/BrushBase";
+import { BrushBase } from "./brush/BaseBrush";
 import { EraserBrush } from "./brush/EraserBrush";
 import { PenBrush } from "./brush/PenBrush";
 import { HSVColor } from "./util";
