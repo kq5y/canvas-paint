@@ -1,8 +1,18 @@
 import { BrushBase } from "./BaseBrush";
 
 export class PenBrush extends BrushBase {
-    constructor(context: CanvasRenderingContext2D, previewContext: CanvasRenderingContext2D) {
+    constructor(
+        context: CanvasRenderingContext2D,
+        previewContext: CanvasRenderingContext2D,
+        brushSize: number,
+        opacity: number,
+        color: string
+    ) {
         super(context, previewContext);
+
+        this.setBrushSize(brushSize);
+        this.setOpacity(opacity);
+        this.setColor(color);
 
         this._previewContext.lineCap = "round";
         this._previewContext.lineJoin = "round";

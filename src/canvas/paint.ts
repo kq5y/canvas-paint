@@ -1,5 +1,6 @@
 import { BrushBase } from "./brush/BaseBrush";
 import { EraserBrush } from "./brush/EraserBrush";
+import { MarkerBrush } from "./brush/MarkerBrush";
 import { PenBrush } from "./brush/PenBrush";
 import { HSVColor } from "./util";
 import { hsv2rgba, makeColorStr } from "./util/color";
@@ -84,20 +85,36 @@ export class Paint {
 
     set mode(mode: Mode) {
         if (this._previewContext && this._context) {
-            this._previewContext.strokeStyle = makeColorStr(hsv2rgba(this._color));
-            this._previewContext.globalAlpha = this._opacity / 100;
             switch (mode) {
                 case "pen":
-                    this._brush = new PenBrush(this._context, this._previewContext);
+                    this._brush = new PenBrush(
+                        this._context,
+                        this._previewContext,
+                        this._brushSize,
+                        this._opacity,
+                        this.getColorString()
+                    );
                     break;
                 case "pencil":
                     this._brush = null;
                     break;
                 case "marker":
-                    this._brush = null;
+                    this._brush = new MarkerBrush(
+                        this._context,
+                        this._previewContext,
+                        this._brushSize,
+                        this._opacity,
+                        this.getColorString()
+                    );
                     break;
                 case "eraser":
-                    this._brush = new EraserBrush(this._context, this._previewContext);
+                    this._brush = new EraserBrush(
+                        this._context,
+                        this._previewContext,
+                        this._brushSize,
+                        this._opacity,
+                        this.getColorString()
+                    );
                     break;
                 case "fill":
                     break;
@@ -119,8 +136,10 @@ export class Paint {
     }
 
     set brushSize(size: number) {
-        this._previewContext!.lineWidth = size;
-        this._brushSize = size;
+        if (this._previewContext && this._brush) {
+            this._brush.setBrushSize(size);
+            this._brushSize = size;
+        }
     }
 
     get opacity() {
@@ -128,8 +147,10 @@ export class Paint {
     }
 
     set opacity(opacity: number) {
-        this._previewContext!.globalAlpha = opacity / 100;
-        this._opacity = opacity;
+        if (this._previewContext && this._brush) {
+            this._brush.setOpacity(opacity);
+            this._opacity = opacity;
+        }
     }
 
     get color() {
@@ -137,8 +158,14 @@ export class Paint {
     }
 
     set color(color: HSVColor) {
-        this._previewContext!.strokeStyle = makeColorStr(hsv2rgba(color));
-        this._color = color;
+        if (this._previewContext && this._brush) {
+            this._brush.setColor(makeColorStr(hsv2rgba(color)));
+            this._color = color;
+        }
+    }
+
+    getColorString() {
+        return makeColorStr(hsv2rgba(this._color));
     }
 
     private _onPointerDown(event: PointerEvent) {
@@ -146,11 +173,11 @@ export class Paint {
         this._brush?.onPointerDown(event);
     }
 
-    private _onPointerMove(event: PointerEvent | MouseEvent | TouchEvent) {
+    private _onPointerMove(event: PointerEvent) {
         if (!this._isDragging) {
             return;
         }
-        this._brush?.onPointerMove(event as PointerEvent);
+        this._brush?.onPointerMove(event);
     }
 
     private _onPointerUp(event: PointerEvent) {

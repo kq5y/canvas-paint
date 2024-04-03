@@ -1,18 +1,32 @@
 import { BrushBase } from "./BaseBrush";
 
 export class EraserBrush extends BrushBase {
-    constructor(context: CanvasRenderingContext2D, previewContext: CanvasRenderingContext2D) {
+    constructor(
+        context: CanvasRenderingContext2D,
+        previewContext: CanvasRenderingContext2D,
+        brushSize: number,
+        opacity: number,
+        color: string
+    ) {
         super(context, previewContext);
+
+        this.setBrushSize(brushSize);
+        this.setOpacity(opacity);
+        this.setColor(color);
 
         this._previewContext.lineCap = "round";
         this._previewContext.lineJoin = "round";
         this._context.globalCompositeOperation = "destination-out";
-        this._initialize();
     }
 
-    _initialize(): void {
-        this._previewContext.strokeStyle = "white";
+    setOpacity(opacity: number): void {
         this._previewContext.globalAlpha = 1;
+        this._opacity = opacity;
+    }
+
+    setColor(color: string): void {
+        this._previewContext.strokeStyle = "white";
+        this._color = color;
     }
 
     render(): void {
@@ -28,7 +42,6 @@ export class EraserBrush extends BrushBase {
 
     onPointerMove(event: PointerEvent): void {
         super.onPointerMove(event);
-        this._initialize();
         this._clear();
         this._previewContext.lineTo(event.offsetX, event.offsetY);
         this._previewContext.stroke();
@@ -36,7 +49,6 @@ export class EraserBrush extends BrushBase {
 
     onPointerUp(event: PointerEvent): void {
         super.onPointerUp(event);
-        this._initialize();
         this._previewContext.closePath();
         this._clear();
         this._previewContext.beginPath();
