@@ -20,7 +20,9 @@ class Layer {
 
     constructor(previewCanvas: HTMLCanvasElement, canvas: HTMLCanvasElement) {
         this.previewCanvas = previewCanvas;
-        const previewContext = previewCanvas.getContext("2d");
+        const previewContext = previewCanvas.getContext("2d", {
+            willReadFrequently: true
+        });
         if (previewContext === null) {
             throw new Error("Failed to get 2D context from canvas");
         }
@@ -28,7 +30,9 @@ class Layer {
         this.previewContext.imageSmoothingEnabled = false;
 
         this.canvas = canvas;
-        const context = canvas.getContext("2d");
+        const context = canvas.getContext("2d", {
+            willReadFrequently: true
+        });
         if (context === null) {
             throw new Error("Failed to get 2D context from canvas");
         }
@@ -58,7 +62,8 @@ export class Paint {
         mode: Mode = "pen",
         brushSize: number = 5,
         opacity: number = 100,
-        color: HSVColor = { h: 0, s: 0, v: 0 }
+        color: HSVColor = { h: 0, s: 0, v: 0 },
+        layerIndex: number = 0
     ) {
         this._isDragging = false;
 
@@ -78,6 +83,7 @@ export class Paint {
         this.brushSize = brushSize;
         this.opacity = opacity;
         this.color = color;
+        this.layerIndex = layerIndex;
     }
 
     getAllImageData() {
