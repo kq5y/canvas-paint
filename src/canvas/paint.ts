@@ -2,6 +2,7 @@ import { BrushBase } from "./brush/BaseBrush";
 import { EraserBrush } from "./brush/EraserBrush";
 import { MarkerBrush } from "./brush/MarkerBrush";
 import { PenBrush } from "./brush/PenBrush";
+import { PencilBrush } from "./brush/PencilBrush";
 import { HSVColor } from "./util";
 import { hsv2rgba, makeColorStr } from "./util/color";
 
@@ -96,7 +97,13 @@ export class Paint {
                     );
                     break;
                 case "pencil":
-                    this._brush = null;
+                    this._brush = new PencilBrush(
+                        this._context,
+                        this._previewContext,
+                        this._brushSize,
+                        this._opacity,
+                        this.getColorString()
+                    );
                     break;
                 case "marker":
                     this._brush = new MarkerBrush(
