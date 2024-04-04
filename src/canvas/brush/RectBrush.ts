@@ -32,7 +32,6 @@ export class RectBrush extends BrushBase {
         }
         this._clear();
         this._previewContext.beginPath();
-        this._previewContext.moveTo(this._startPoint.x, this._startPoint.y);
         this._previewContext.rect(
             this._startPoint.x,
             this._startPoint.y,
@@ -48,7 +47,6 @@ export class RectBrush extends BrushBase {
         }
         this._clear();
         this._previewContext.beginPath();
-        this._previewContext.moveTo(this._startPoint.x, this._startPoint.y);
         this._previewContext.rect(
             this._startPoint.x,
             this._startPoint.y,
