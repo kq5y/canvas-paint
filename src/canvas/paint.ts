@@ -4,6 +4,7 @@ import { LineBrush } from "./brush/LineBrush";
 import { MarkerBrush } from "./brush/MarkerBrush";
 import { PenBrush } from "./brush/PenBrush";
 import { PencilBrush } from "./brush/PencilBrush";
+import { RectBrush } from "./brush/RectBrush";
 import { HSVColor } from "./util";
 import { hsv2rgba, makeColorStr } from "./util/color";
 
@@ -136,6 +137,13 @@ export class Paint {
                     );
                     break;
                 case "rect":
+                    this._brush = new RectBrush(
+                        this._context,
+                        this._previewContext,
+                        this._brushSize,
+                        this._opacity,
+                        this.getColorString()
+                    );
                     break;
                 case "circle":
                     break;
