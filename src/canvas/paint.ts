@@ -12,11 +12,34 @@ import { hsv2rgba, makeColorStr } from "./util/color";
 
 export type Mode = "pen" | "pencil" | "marker" | "eraser" | "fill" | "line" | "rect" | "circle";
 
+class Layer {
+    previewCanvas: HTMLCanvasElement;
+    previewContext: CanvasRenderingContext2D;
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
+
+    constructor(previewCanvas: HTMLCanvasElement, canvas: HTMLCanvasElement) {
+        this.previewCanvas = previewCanvas;
+        const previewContext = previewCanvas.getContext("2d");
+        if (previewContext === null) {
+            throw new Error("Failed to get 2D context from canvas");
+        }
+        this.previewContext = previewContext;
+        this.previewContext.imageSmoothingEnabled = false;
+
+        this.canvas = canvas;
+        const context = canvas.getContext("2d");
+        if (context === null) {
+            throw new Error("Failed to get 2D context from canvas");
+        }
+        this.context = context;
+        this.context.imageSmoothingEnabled = false;
+    }
+}
+
 export class Paint {
-    private _previewCanvas: HTMLCanvasElement;
-    private _previewContext: CanvasRenderingContext2D | null;
-    private _canvas: HTMLCanvasElement;
-    private _context: CanvasRenderingContext2D | null;
+    private _layers: Layer[] = [];
+    private _layerIndex: number = -1;
 
     private _mode: Mode = "pen";
     private _brushSize: number = 5;
@@ -27,11 +50,11 @@ export class Paint {
 
     private _isDragging: boolean = false;
 
-    private _imageLog: ImageData[] = [];
+    private _imageLog: ImageData[][] = [];
 
     constructor(
-        previewCanvas: HTMLCanvasElement,
-        canvas: HTMLCanvasElement,
+        previewCanvases: HTMLCanvasElement[],
+        canvases: HTMLCanvasElement[],
         mode: Mode = "pen",
         brushSize: number = 5,
         opacity: number = 100,
@@ -39,24 +62,17 @@ export class Paint {
     ) {
         this._isDragging = false;
 
-        this._previewCanvas = previewCanvas;
-        this._previewContext = previewCanvas.getContext("2d");
-        if (!this._previewContext) {
-            throw new Error("Failed to get 2D context from canvas");
+        if (previewCanvases.length !== canvases.length) {
+            throw new Error("The number of preview canvases and canvases must be the same.");
         }
-        this._previewContext.imageSmoothingEnabled = false;
 
-        this._canvas = canvas;
-        this._context = canvas.getContext("2d");
-        if (!this._context) {
-            throw new Error("Failed to get 2D context from canvas");
+        for (let i = 0; i < previewCanvases.length; i++) {
+            this._layers.push(new Layer(previewCanvases[i], canvases[i]));
         }
-        this._context.imageSmoothingEnabled = false;
+        this._layerIndex = 0;
 
         this._imageLog = [];
-        this._imageLog.push(
-            this._context.getImageData(0, 0, this._canvas.width, this._canvas.height)
-        );
+        this._updateImageLog();
 
         this.mode = mode;
         this.brushSize = brushSize;
@@ -64,24 +80,54 @@ export class Paint {
         this.color = color;
     }
 
-    initialize() {
-        this._previewCanvas.addEventListener("pointerdown", (e) =>
-            this._onPointerDown.bind(this)(e)
-        );
-        this._previewCanvas.addEventListener("pointermove", (e) =>
-            this._onPointerMove.bind(this)(e)
-        );
-        this._previewCanvas.addEventListener("pointerup", (e) => this._onPointerUp.bind(this)(e));
-        this._previewCanvas.addEventListener("pointercancel", (e) =>
-            this._onPointerUp.bind(this)(e)
+    getAllImageData() {
+        return this._layers.map((layer) =>
+            layer.context.getImageData(0, 0, layer.canvas.width, layer.canvas.height)
         );
     }
 
+    getTopCanvas() {
+        return this._layers[this._layers.length - 1].previewCanvas;
+    }
+
+    initialize() {
+        const topCanvas = this.getTopCanvas();
+        topCanvas.addEventListener("pointerdown", (e) => this._onPointerDown.bind(this)(e));
+        topCanvas.addEventListener("pointermove", (e) => this._onPointerMove.bind(this)(e));
+        topCanvas.addEventListener("pointerup", (e) => this._onPointerUp.bind(this)(e));
+        topCanvas.addEventListener("pointercancel", (e) => this._onPointerUp.bind(this)(e));
+    }
+
     destroy() {
-        this._previewCanvas.removeEventListener("pointerdown", this._onPointerDown.bind(this));
-        this._previewCanvas.removeEventListener("pointermove", this._onPointerMove.bind(this));
-        this._previewCanvas.removeEventListener("pointerup", this._onPointerUp.bind(this));
-        this._previewCanvas.removeEventListener("pointercancel", this._onPointerUp.bind(this));
+        const topCanvas = this.getTopCanvas();
+        topCanvas.removeEventListener("pointerdown", this._onPointerDown.bind(this));
+        topCanvas.removeEventListener("pointermove", this._onPointerMove.bind(this));
+        topCanvas.removeEventListener("pointerup", this._onPointerUp.bind(this));
+        topCanvas.removeEventListener("pointercancel", this._onPointerUp.bind(this));
+    }
+
+    get _previewContext() {
+        return this._layers[this._layerIndex].previewContext;
+    }
+
+    get _context() {
+        return this._layers[this._layerIndex].context;
+    }
+
+    get _canvas() {
+        return this._layers[this._layerIndex].canvas;
+    }
+
+    get layerIndex() {
+        return this._layerIndex;
+    }
+
+    set layerIndex(index: number) {
+        if (index < 0 || index >= this._layers.length) {
+            throw new Error(`Invalid layer index: ${index}`);
+        }
+        this._layerIndex = index;
+        this.mode = this._mode;
     }
 
     get mode() {
@@ -175,7 +221,7 @@ export class Paint {
     }
 
     set brushSize(size: number) {
-        if (this._previewContext && this._brush) {
+        if (this._brush) {
             this._brush.setBrushSize(size);
             this._brushSize = size;
         }
@@ -186,7 +232,7 @@ export class Paint {
     }
 
     set opacity(opacity: number) {
-        if (this._previewContext && this._brush) {
+        if (this._brush) {
             this._brush.setOpacity(opacity);
             this._opacity = opacity;
         }
@@ -197,7 +243,7 @@ export class Paint {
     }
 
     set color(color: HSVColor) {
-        if (this._previewContext && this._brush) {
+        if (this._brush) {
             this._brush.setColor(makeColorStr(hsv2rgba(color)));
             this._color = color;
         }
@@ -208,61 +254,58 @@ export class Paint {
     }
 
     private _onPointerDown(event: PointerEvent) {
+        if (!this._brush) {
+            return;
+        }
         this._isDragging = true;
-        this._brush?.onPointerDown(event);
+        this._brush.onPointerDown(event);
     }
 
     private _onPointerMove(event: PointerEvent) {
-        if (!this._isDragging) {
+        if (!this._isDragging || !this._brush) {
             return;
         }
-        this._brush?.onPointerMove(event);
+        this._brush.onPointerMove(event);
     }
 
     private _onPointerUp(event: PointerEvent) {
-        if (!this._isDragging) {
+        if (!this._isDragging || !this._brush) {
             return;
         }
-        this._brush?.onPointerUp(event);
+        this._brush.onPointerUp(event);
         this.modified();
         this._isDragging = false;
     }
 
     private modified() {
-        if (this._context && this._previewContext && this._brush) {
-            const imageData = this._context.getImageData(
-                0,
-                0,
-                this._canvas.width,
-                this._canvas.height
-            );
-            this._imageLog.push(imageData);
-            if (this._imageLog.length > 20) {
-                this._imageLog.shift();
-            }
+        if (this._brush) {
+            this._updateImageLog();
             this._brush.render();
+        }
+    }
+
+    private _updateImageLog() {
+        this._imageLog.push(this.getAllImageData());
+        if (this._imageLog.length > 20) {
+            this._imageLog.shift();
         }
     }
 
     undo() {
         if (this._imageLog.length > 0 && this._context) {
-            this._context.putImageData(this._imageLog.pop()!, 0, 0);
+            const logs = this._imageLog.pop();
+            if (logs) {
+                for (let i = 0; i < logs.length; i++) {
+                    this._layers[i].context.putImageData(logs[i], 0, 0);
+                }
+            }
         }
     }
 
     clear() {
-        if (this._context) {
-            const imageData = this._context.getImageData(
-                0,
-                0,
-                this._canvas.width,
-                this._canvas.height
-            );
-            this._imageLog.push(imageData);
-            if (this._imageLog.length > 20) {
-                this._imageLog.shift();
-            }
-            this._context.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._updateImageLog();
+        for (const layer of this._layers) {
+            layer.context.clearRect(0, 0, layer.canvas.width, layer.canvas.height);
         }
     }
 }

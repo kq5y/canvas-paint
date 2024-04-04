@@ -51,8 +51,8 @@ function Canvas() {
     useEffect(() => {
         if (canvasRef.current && previewCanvasRef.current) {
             paintRef.current = new Paint(
-                previewCanvasRef.current,
-                canvasRef.current,
+                [previewCanvasRef.current],
+                [canvasRef.current],
                 mode,
                 brushSize,
                 opacity,
