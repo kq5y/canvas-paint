@@ -26,6 +26,10 @@ export class FillBrush extends BrushBase {
         this.setColor(color);
     }
 
+    _pixelsEqual(p1: number[], p2: number[]): boolean {
+        return p1[0] === p2[0] && p1[1] === p2[1] && p1[2] === p2[2];
+    }
+
     _compareColor(
         imageData: ImageData,
         x: number,
@@ -43,12 +47,7 @@ export class FillBrush extends BrushBase {
         const alpha = imageData.data[(y * this._width + x) * 4 + 3];
 
         if (alpha !== 0) {
-            if (
-                selectedColor[0] !== color[0] ||
-                selectedColor[1] !== color[1] ||
-                selectedColor[2] !== color[2]
-            )
-                return false;
+            if (!this._pixelsEqual(selectedColor, color)) return false;
             if (isAlpha) return false;
         } else if (alpha === 0 && !isAlpha) return false;
 
@@ -72,12 +71,7 @@ export class FillBrush extends BrushBase {
         const isAlpha = !Boolean(alpha);
 
         if (alpha !== 0) {
-            if (
-                selectedColor[0] === color[0] &&
-                selectedColor[1] === color[1] &&
-                selectedColor[2] === color[2]
-            )
-                return;
+            if (this._pixelsEqual(selectedColor, color)) return;
         }
 
         const pxlArr: { x: number; y: number }[] = [{ x: x, y: y }];

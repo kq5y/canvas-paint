@@ -140,8 +140,6 @@ export class PencilBrush extends BrushBase {
                 this._brushOverlap,
                 this._remainingDistance
             );
-            console.log(this._brushOverlap);
-            console.log(points, remaining);
             this._remainingDistance = remaining;
             for (const point of points) {
                 this._draw(point.x, point.y);

@@ -50,6 +50,5 @@ export class PenBrush extends BrushBase {
             );
         }
         this._previewContext.stroke();
-        this._previewContext.closePath();
     }
 }
