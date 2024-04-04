@@ -46,3 +46,11 @@ export function makeColorStr(color: number[]): string {
         ")"
     );
 }
+
+export function rgbaStr2Array(color: string): number[] {
+    const rgba = color
+        .substring(color.indexOf("(") + 1, color.indexOf(")"))
+        .split(",")
+        .map((v) => parseInt(v));
+    return rgba;
+}

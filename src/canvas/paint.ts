@@ -1,6 +1,7 @@
 import { BrushBase } from "./brush/BaseBrush";
 import { CircleBrush } from "./brush/CircleBrush";
 import { EraserBrush } from "./brush/EraserBrush";
+import { FillBrush } from "./brush/FillBrush";
 import { LineBrush } from "./brush/LineBrush";
 import { MarkerBrush } from "./brush/MarkerBrush";
 import { PenBrush } from "./brush/PenBrush";
@@ -127,6 +128,13 @@ export class Paint {
                     );
                     break;
                 case "fill":
+                    this._brush = new FillBrush(
+                        this._context,
+                        this._previewContext,
+                        this._brushSize,
+                        this._opacity,
+                        this.getColorString()
+                    );
                     break;
                 case "line":
                     this._brush = new LineBrush(
@@ -237,8 +245,8 @@ export class Paint {
     }
 
     undo() {
-        if (this._imageLog.length > 0) {
-            this._context?.putImageData(this._imageLog.pop()!, 0, 0);
+        if (this._imageLog.length > 0 && this._context) {
+            this._context.putImageData(this._imageLog.pop()!, 0, 0);
         }
     }
 
