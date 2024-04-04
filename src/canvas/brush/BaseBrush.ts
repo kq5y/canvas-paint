@@ -8,12 +8,17 @@ export class BrushBase {
         cp1: { x: number; y: number };
         cp2: { x: number; y: number };
     }[];
+    protected _enableComplement: boolean;
 
     protected _brushSize: number;
     protected _opacity: number;
     protected _color: string;
 
-    constructor(context: CanvasRenderingContext2D, previewContext: CanvasRenderingContext2D) {
+    constructor(
+        context: CanvasRenderingContext2D,
+        previewContext: CanvasRenderingContext2D,
+        enableComplement: boolean = true
+    ) {
         this._brushSize = 5;
         this._opacity = 100;
         this._color = "#000000";
@@ -22,6 +27,7 @@ export class BrushBase {
         this._previewContext = previewContext;
         this._points = [];
         this._controlPoints = [];
+        this._enableComplement = enableComplement;
 
         this._context.globalCompositeOperation = "source-over";
         this._previewContext.globalCompositeOperation = "source-over";
@@ -68,7 +74,7 @@ export class BrushBase {
 
     onPointerUp(event: PointerEvent): void {
         this._points.push({ x: event.offsetX, y: event.offsetY });
-        if (this._points.length >= 2) {
+        if (this._points.length >= 2 && this._enableComplement) {
             for (let i = 0; i < this._points.length - 1; i++) {
                 const p0 = i === 0 ? undefined : this._points[i - 1];
                 const p1 = this._points[i];

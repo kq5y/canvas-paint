@@ -1,5 +1,6 @@
 import { BrushBase } from "./brush/BaseBrush";
 import { EraserBrush } from "./brush/EraserBrush";
+import { LineBrush } from "./brush/LineBrush";
 import { MarkerBrush } from "./brush/MarkerBrush";
 import { PenBrush } from "./brush/PenBrush";
 import { PencilBrush } from "./brush/PencilBrush";
@@ -126,6 +127,13 @@ export class Paint {
                 case "fill":
                     break;
                 case "line":
+                    this._brush = new LineBrush(
+                        this._context,
+                        this._previewContext,
+                        this._brushSize,
+                        this._opacity,
+                        this.getColorString()
+                    );
                     break;
                 case "rect":
                     break;
