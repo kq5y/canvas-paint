@@ -26,7 +26,6 @@ export class Paint {
     private _brush: BrushBase | null = null;
 
     private _isDragging: boolean = false;
-    //private _isFilling: boolean = false;
 
     private _imageLog: ImageData[] = [];
 
@@ -39,19 +38,20 @@ export class Paint {
         color: HSVColor = { h: 0, s: 0, v: 0 }
     ) {
         this._isDragging = false;
-        //this._isFilling = false;
 
         this._previewCanvas = previewCanvas;
         this._previewContext = previewCanvas.getContext("2d");
         if (!this._previewContext) {
             throw new Error("Failed to get 2D context from canvas");
         }
+        this._previewContext.imageSmoothingEnabled = false;
 
         this._canvas = canvas;
         this._context = canvas.getContext("2d");
         if (!this._context) {
             throw new Error("Failed to get 2D context from canvas");
         }
+        this._context.imageSmoothingEnabled = false;
 
         this._imageLog = [];
         this._imageLog.push(

@@ -118,6 +118,7 @@ export class FillBrush extends BrushBase {
 
     render(): void {
         if (this._context && this._imageData) {
+            this._context.clearRect(0, 0, this._width, this._height);
             this._context.putImageData(this._imageData, 0, 0);
             this._imageData = null;
         }
