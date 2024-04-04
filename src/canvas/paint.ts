@@ -1,4 +1,5 @@
 import { BrushBase } from "./brush/BaseBrush";
+import { CircleBrush } from "./brush/CircleBrush";
 import { EraserBrush } from "./brush/EraserBrush";
 import { LineBrush } from "./brush/LineBrush";
 import { MarkerBrush } from "./brush/MarkerBrush";
@@ -146,6 +147,13 @@ export class Paint {
                     );
                     break;
                 case "circle":
+                    this._brush = new CircleBrush(
+                        this._context,
+                        this._previewContext,
+                        this._brushSize,
+                        this._opacity,
+                        this.getColorString()
+                    );
                     break;
                 default:
                     throw new Error(`Invalid mode: ${mode}`);
