@@ -1,5 +1,6 @@
 import { base64ToBitmap } from "../util/base64";
 import { getBezierCurvePoints } from "../util/complement";
+import { Random } from "../util/random";
 import { BrushBase } from "./BaseBrush";
 
 const BRUSH_ASSET =
@@ -14,6 +15,7 @@ export class PencilBrush extends BrushBase {
     _brushOverlap: number;
     _remainingDistance: number;
     _brush_asset_bitmap: ImageBitmap | null;
+    _random: Random;
 
     constructor(
         context: CanvasRenderingContext2D,
@@ -28,6 +30,7 @@ export class PencilBrush extends BrushBase {
         this._brushOverlap = 0;
         this._remainingDistance = 0;
         this._brush_asset_bitmap = null;
+        this._random = new Random(Date.now());
 
         this.setBrushSize(brushSize);
         this.setOpacity(opacity, false);
@@ -38,8 +41,8 @@ export class PencilBrush extends BrushBase {
     }
 
     _draw(x: number, y: number): void {
-        const angle = Math.random() * Math.PI * 2;
-        const opacity = Math.random() * 0.4 + 0.1;
+        const angle = this._random.random() * Math.PI * 2;
+        const opacity = this._random.random() * 0.4 + 0.1;
         this._previewContext.globalAlpha = opacity;
         this._previewContext.translate(x, y);
         this._previewContext.rotate(angle);
@@ -95,6 +98,7 @@ export class PencilBrush extends BrushBase {
 
     onPointerDown(event: PointerEvent): void {
         super.onPointerDown(event);
+        this._random = new Random(Date.now());
         this._lastPoint = { x: event.offsetX, y: event.offsetY };
     }
 
@@ -108,8 +112,8 @@ export class PencilBrush extends BrushBase {
                 Math.pow(event.offsetX - this._lastPoint.x, 2) +
                     Math.pow(event.offsetY - this._lastPoint.y, 2)
             ) + this._remainingDistance;
-        const step = Math.floor(distance / this._brushOverlap);
-        const processDistance = step * this._brushOverlap;
+        const step = Math.floor(distance / (this._brushOverlap * 1.1));
+        const processDistance = step * (this._brushOverlap * 1.1);
         this._remainingDistance = distance - processDistance;
         const t_x = (((event.offsetX - this._lastPoint.x) / distance) * processDistance) / step;
         const t_y = (((event.offsetY - this._lastPoint.y) / distance) * processDistance) / step;
@@ -126,6 +130,7 @@ export class PencilBrush extends BrushBase {
         this._clear();
         this._lastPoint = null;
         this._remainingDistance = 0;
+        this._random.reset();
         for (let i = 0; i < this._points.length - 1; i++) {
             const { points, remaining } = getBezierCurvePoints(
                 this._points[i],
